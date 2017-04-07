@@ -1,6 +1,6 @@
 function ContrastMapSimilarities(varargin)
 %% ContrastMapSimilarities
-% Compute and show the similarities between the contrast maps provided.
+% Compute and show the similarities between the Contrast maps provided.
 %
 % Arguments:
 %   'folder'    : Folder containing the contrast maps. 
@@ -18,12 +18,9 @@ function ContrastMapSimilarities(varargin)
 %                 appear in the graph.
 %                       Default : 1.
 %   'clr_type'  : Coloring type to apply.
-%                       0 : Color depends of the number of times a
-%                       similarity appears. (Default)
-%                       1 : Different colors are assigned to each contrast
-%                       map. 
-%   'clr_scheme': Color scheme to apply.
-%                       Default : [1 0 0;0 1 0;0 0 1;1 1 0;0 1 1;1 0 1].
+%                       0: Color depends of the number of times a similarity appears.
+% 1: Color depends of what contast map are here.
+%   'clr_scheme':   
 
 %%
 % Specify the MAT files to use.
