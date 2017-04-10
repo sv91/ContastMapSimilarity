@@ -24,32 +24,70 @@ function ContrastMapSimilarities(varargin)
 %                       map. 
 %   'clr_scheme': Color scheme to apply.
 %                       Default : [1 0 0;0 1 0;0 0 1;1 1 0;0 1 1;1 0 1].
+%
+% Example:
+%   ContrastMapSimilarities('folder','example/folder','thr_coef', 10, 'min_sym', 5);
 
-%%
-% Specify the MAT files to use.
-folder = pwd;
-% Regex of the files to analyse.
-rgx = '*V0.mat';
-% Coefficient to use in case of a threshold defined compared to the
-% average.
-thr_coef_mult = 2;
-% Type of threshold.
-%   0: mean * coef.
-%   1: -log(p) * coef.
-thr_type = 1;
-% Thresholp p value:
-thr_p = 0.01;
-% Minimal number of similarities for which are shown on the graph.
-limit = 3;
+%% Managing the inputs
+if nargin > 0
+   for i=1:nargin-1
+       switch varargin{i}
+           case 'folder'
+               folder = varargin{i+1};
+           case 'regex'
+               rgx = varargin{i+1};
+           case 'thr_coef'
+               thr_coef_mult = varargin{i+1};
+           case 'thr_type'
+               thr_type = varargin{i+1};
+           case 'thr_p'
+               thr_p = varargin{i+1};
+           case 'min_sym'
+               limit = varargin{i+1};
+           case 'clr_type'
+               clr_type = varargin{i+1};
+           case 'clr_scheme'
+               clr_scheme = varargin{i+1};
+           otherwise
+               fprintf('Unknown argument "%d"\n',varargin{i});
+       end
+   end
+end
 
-% Coloring type to apply.
-% 0: Color depends of the number of times a similarity appears.
-% 1: Color depends of what contast map are here.
-clr_type = 1;
+%% Setting to default all the unset variables.
+if notDefined('folder')   
+    folder = pwd;
+end
 
-% Color scheme to apply.
-clr_sceme = [1 0 0;0 0 1;0 1 0;0 1 1;1 1 0;1 0 1];
+if notDefined('rgx')   
+    rgx = '*.mat';
+end
 
+if notDefined('thr_coef_mult')   
+    thr_coef_mult = 1;
+end
+
+if notDefined('thr_type')   
+    thr_type = 0;
+end
+
+if notDefined('thr_p')   
+    thr_p = 0.01;
+end
+
+if notDefined('limit')   
+    limit = 1;
+end
+
+if notDefined('clr_type')   
+    clr_type = 0;
+end
+
+if notDefined('clr_scheme')   
+    clr_scheme = [1 0 0;0 0 1;0 1 0;0 1 1;1 1 0;1 0 1];
+end
+
+%% Calculations
 % Getting all the files coresponding to the regex.
 tmp = dir(fullfile(folder,rgx));
 nb_files= numel(tmp);
@@ -105,7 +143,7 @@ for ii = 1:nb_files
                if (abs(t(i,j,k))>threshold)
                    temp(i,j,k) = temp(i,j,k) + 1;
                    for color_i=1:3
-                        clr_temp(i,j,k,color_i) = (clr_temp(i,j,k,color_i)/temp(i,j,k))*(temp(i,j,k)-1)+clr_sceme(ii,color_i)/temp(i,j,k);
+                        clr_temp(i,j,k,color_i) = (clr_temp(i,j,k,color_i)/temp(i,j,k))*(temp(i,j,k)-1)+clr_scheme(ii,color_i)/temp(i,j,k);
                    end
                end
            end
@@ -153,17 +191,17 @@ for i=1:a
                 alp = 0.7;
                 switch temp(i,j,k)
                     case nb_files-5
-                        col = clr_sceme(6,:);
+                        col = clr_scheme(6,:);
                     case nb_files-4
-                        col = clr_sceme(5,:);
+                        col = clr_scheme(5,:);
                     case nb_files-3
-                        col = clr_sceme(4,:);
+                        col = clr_scheme(4,:);
                     case nb_files-2
-                        col = clr_sceme(3,:);
+                        col = clr_scheme(3,:);
                     case nb_files-1
-                        col = clr_sceme(2,:);
+                        col = clr_scheme(2,:);
                     case nb_files
-                        col = clr_sceme(1,:);
+                        col = clr_scheme(1,:);
                 end
                 voxel([i j k],[1 1 1],col,alp);
             end
