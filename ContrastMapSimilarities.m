@@ -35,41 +35,41 @@ function ContrastMapSimilarities(varargin)
 
 %% Managing the inputs
 if nargin > 0
-   for i=1:2:nargin-1
+   for i=1:2:nargin
        switch varargin{i}
            case 'folder'
-               folder = varargin{i+1};
+               folder        = fullfile(pwd,varargin{i+1});
            case 'regex'
-               rgx = varargin{i+1};
+               rgx           = varargin{i+1};
            case 'thr_coef'
                thr_coef_mult = varargin{i+1};
            case 'thr_type'
-               thr_type = varargin{i+1};
+               thr_type      = varargin{i+1};
            case 'thr_p'
-               thr_p = varargin{i+1};
+               thr_p         = varargin{i+1};
            case 'min_sym'
-               limit = varargin{i+1};
+               limit         = varargin{i+1};
            case 'clr_type'
-               clr_type = varargin{i+1};
+               clr_type      = varargin{i+1};
            case 'clr_scheme'
-               clr_scheme = varargin{i+1};
+               clr_scheme    = varargin{i+1};
            case 'show_brain'
-               show_brain = varargin{i+1};
+               show_brain    = varargin{i+1};
            case 'inp_file'
-               inp_file = varargin{i+1};
+               inp_file      = fullfile(pwd,varargin{i+1});
            otherwise
-               fprintf('Unknown argument "%d"\n',varargin{i});
+               fprintf('Unknown argument "%s"\n',varargin{i});
        end
    end
 end
 
 %% Setting to default all the unset variables.
 if notDefined('folder')   
-    folder = pwd;
+    folder       = pwd;
 end
 
 if notDefined('rgx')   
-    rgx = '*.mat';
+    rgx          = '*.mat';
 end
 
 if notDefined('thr_coef_mult')   
@@ -77,31 +77,31 @@ if notDefined('thr_coef_mult')
 end
 
 if notDefined('thr_type')   
-    thr_type = 0;
+    thr_type    = 0;
 end
 
 if notDefined('thr_p')   
-    thr_p = 0.01;
+    thr_p       = 0.01;
 end
 
 if notDefined('limit')   
-    limit = 1;
+    limit       = 1;
 end
 
 if notDefined('clr_type')   
-    clr_type = 0;
+    clr_type    = 0;
 end
 
 if notDefined('clr_scheme')   
-    clr_scheme = [1 0 0;0 0 1;0 1 0;0 1 1;1 1 0;1 0 1];
+    clr_scheme  = [1 0 0;0 0 1;0 1 0;0 1 1;1 1 0;1 0 1];
 end
 
 if notDefined('show_brain')   
-    show_brain = 1;
+    show_brain  = 1;
 end
 
 if notDefined('inp_file')   
-    inp_file = 'inplane.png';
+    inp_file    = 'inplane.png';
 end
 
 %% Calculations
@@ -109,46 +109,47 @@ end
 tmp = dir(fullfile(folder,rgx));
 nb_files= numel(tmp);
 for ii = 1:nb_files
-    mat_file{ii} = fullfile( tmp(ii).name); 
+    mat_file{ii} = fullfile(folder, tmp(ii).name); 
     assert(exist(mat_file{ii}, 'file')>0)
 end
 
 % Preallocting all the needed matrices.
-temp = zeros(128,128,54);
+temp     = zeros(128,128,54);
 clr_temp = zeros(128,128,54,3);
-maxV = zeros(0,nb_files);
-minV = zeros(0,nb_files);
-avgV = zeros(0,nb_files);
-absV = zeros(0,nb_files);
+maxV     = zeros(0,nb_files);
+minV     = zeros(0,nb_files);
+avgV     = zeros(0,nb_files);
+absV     = zeros(0,nb_files);
 
 % Checking the values of each file.
 for ii = 1:nb_files
-   L = load(mat_file{ii});
+   L          = load(mat_file{ii});
    maxV(1,ii) = max(max(max(L.map{1})));
    minV(1,ii) = min(min(min(L.map{1})));
    avgV(1,ii) = mean(mean(mean(L.map{1})));
    absV(1,ii) = mean(mean(mean(abs(L.map{1}))));
 end
 
-disp('max')
-disp(maxV)
-disp('minV')
-disp(minV)
-disp('avgV')
-disp(avgV)
-disp('absV')
-disp(absV)
+fprintf('Maximal values:\n');
+disp(maxV);
+fprintf('Minimal values:\n');
+disp(minV);
+fprintf('Mean values:\n');
+disp(avgV);
+fprintf('Absolute mean values:\n');
+disp(absV);
 
 % Calculating the threshold depending of the type.
 switch thr_type
     case 0
         threshold = mean(absV)*thr_coef_mult;
-        thr_val = thr_coef_mult;
+        thr_val   = thr_coef_mult;
     case 1
         threshold = -log(thr_p)*thr_coef_mult;
-        thr_val = thr_p;
+        thr_val   = thr_p;
 end
 
+fprintf('=====\nComputing similarities\n=====\n');
 % Keeping only the needed values.
 for ii = 1:nb_files
    L = load(mat_file{ii});
@@ -168,39 +169,15 @@ for ii = 1:nb_files
    end
 end
 
-%Find head borders
-% temp_c = L.co{1};
-% [x,y,z] = size(temp_c);
-% for i =1:z
-%     for j=1:y
-%         found_start = false;
-%         found_end = false;
-%         counter = 1;
-%         while ~found_start && counter < x
-%             if temp_c(counter,j,i) > 0.015
-%                 found_start = true;
-%                 temp(counter,j,i) = 100;
-%             end
-%             counter = counter +1;
-%         end
-%         counter = x;
-%         while ~found_end && counter > 0
-%             if temp_c(counter,j,i) > 0.015
-%                 found_end = true;
-%                 temp(counter,j,i) = 100;
-%             end
-%             counter = counter -1;
-%         end
-%     end
-% end
 
 figure
 hold on;
-% Color the brain.
+%% Color the brain.
+fprintf('=====\nGeneration started\n=====\n');
 [a,b,c] = size(temp);
 for i=1:a
     if mod(i,10)==0
-        disp(i)
+        fprintf('Generated %d slices out of %d.\n',i,a);
     end
     for j=1:b
         for k=1:c
@@ -231,6 +208,7 @@ for i=1:a
         end
     end
 end
+fprintf('=====\nGeneration finished\n=====\n');
 rotate3d on
 axis([0 a 0 b 0 c]);
 fldrs = strsplit(folder,'/');
@@ -249,10 +227,13 @@ if show_brain
     end
     pic_x = pic_a/pic_s;
     pic_y = pic_b/pic_s;
+    
     pic_pos_y = floor((c/2)/pic_y);
     pic_pos_x = mod(c/2,pic_x)-1;
+    
     mid_picture_I = I(pic_pos_x*pic_s+1:(pic_pos_x+1)*pic_s-1,pic_pos_y*pic_s+1:(pic_pos_y+1)*pic_s-1);
     mid_picture_I = fliplr(mid_picture_I);
+    
     [X, Y, Z] = meshgrid(1:a,1:b,c/2);
     w = warp(Y,X,Z,mid_picture_I);
     set(w,'FaceAlpha',0.2);
