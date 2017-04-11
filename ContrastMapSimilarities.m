@@ -24,13 +24,18 @@ function ContrastMapSimilarities(varargin)
 %                       map. 
 %   'clr_scheme': Color scheme to apply.
 %                       Default : [1 0 0;0 1 0;0 0 1;1 1 0;0 1 1;1 0 1].
+%   'show_brain': Show the middle inplane slice.
+%                       0 : Not showing.
+%                       1 : Show. (Default)
+%   'inp_file'  : Path to the inplane picture.
+%                       Default : "inplane.png".
 %
 % Example:
 %   ContrastMapSimilarities('folder','example/folder','thr_coef', 10, 'min_sym', 5);
 
 %% Managing the inputs
 if nargin > 0
-   for i=1:nargin-1
+   for i=1:2:nargin-1
        switch varargin{i}
            case 'folder'
                folder = varargin{i+1};
@@ -48,6 +53,10 @@ if nargin > 0
                clr_type = varargin{i+1};
            case 'clr_scheme'
                clr_scheme = varargin{i+1};
+           case 'show_brain'
+               show_brain = varargin{i+1};
+           case 'inp_file'
+               inp_file = varargin{i+1};
            otherwise
                fprintf('Unknown argument "%d"\n',varargin{i});
        end
@@ -85,6 +94,14 @@ end
 
 if notDefined('clr_scheme')   
     clr_scheme = [1 0 0;0 0 1;0 1 0;0 1 1;1 1 0;1 0 1];
+end
+
+if notDefined('show_brain')   
+    show_brain = 1;
+end
+
+if notDefined('inp_file')   
+    inp_file = 'inplane.png';
 end
 
 %% Calculations
@@ -177,15 +194,17 @@ end
 %     end
 % end
 
-%color the brain
-[a,b,c] = size(temp);
 figure
+hold on;
+% Color the brain.
+[a,b,c] = size(temp);
 for i=1:a
     if mod(i,10)==0
         disp(i)
     end
     for j=1:b
         for k=1:c
+            % Coloring type 0
             if temp(i,j,k)>=limit && clr_type==0
                 col='';
                 alp = 0.7;
@@ -205,6 +224,7 @@ for i=1:a
                 end
                 voxel([i j k],[1 1 1],col,alp);
             end
+            % Coloring type 1
             if temp(i,j,k)>=1 && clr_type==1
                 voxel([i j k],[1 1 1],clr_temp(i,j,k,:),0.8);
             end
@@ -216,23 +236,25 @@ axis([0 a 0 b 0 c]);
 fldrs = strsplit(folder,'/');
 title(strcat('Subject ',fldrs(6),'; Selection: ',rgx,'; ThrCoef: ',num2str(thr_val),'; Showing over: ',num2str(limit)));
 %% Creating middle pictures
-[I,pic_map] = imread('Images/inplane.png');
-[pic_a,pic_b] = size(I);
-pic_s = 0;
-good = false;
-while ~good & pic_s<pic_a-1
-    pic_s = pic_s + 1;
-    if(I(pic_s,:) == (ones(1,pic_b)*255) & mod(pic_a,pic_s)==0)
-        good = true;
+if show_brain
+    I = imread(inp_file);
+    [pic_a,pic_b] = size(I);
+    pic_s = 0;
+    good = false;
+    while ~good & pic_s<pic_a-1
+        pic_s = pic_s + 1;
+        if(I(pic_s,:) == (ones(1,pic_b)*255) & mod(pic_a,pic_s)==0)
+            good = true;
+        end
     end
+    pic_x = pic_a/pic_s;
+    pic_y = pic_b/pic_s;
+    pic_pos_y = floor((c/2)/pic_y);
+    pic_pos_x = mod(c/2,pic_x)-1;
+    mid_picture_I = I(pic_pos_x*pic_s+1:(pic_pos_x+1)*pic_s-1,pic_pos_y*pic_s+1:(pic_pos_y+1)*pic_s-1);
+    mid_picture_I = fliplr(mid_picture_I);
+    [X, Y, Z] = meshgrid(1:a,1:b,c/2);
+    w = warp(Y,X,Z,mid_picture_I);
+    set(w,'FaceAlpha',0.2);
 end
-pic_x = pic_a/pic_s;
-pic_y = pic_b/pic_s;
-pic_pos_y = floor((c/2)/pic_y);
-pic_pos_x = mod(c/2,pic_x)-1;
-mid_picture_I = I(pic_pos_x*pic_s+1:(pic_pos_x+1)*pic_s-1,pic_pos_y*pic_s+1:(pic_pos_y+1)*pic_s-1);
-%mid_picture_map = pic_map(pic_pos_x*pic_s+1:(pic_pos_x+1)*pic_s,pic_pos_y*pic_s+1:(pic_pos_y+1)*pic_s,:);
-%%
-[X,Y] = meshgrid(0:a,0:b);
-Z = c/2;
-warp(X,Y,Z,mid_picture_I);
+hold off;
